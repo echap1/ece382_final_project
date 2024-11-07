@@ -3,7 +3,7 @@
 
 extern crate msp432P401r_api;
 extern crate cortex_m_rt;
-extern crate panic_halt;
+extern crate panic_semihosting;
 
 use core::arch::asm;
 use cortex_m_rt::entry;
@@ -11,7 +11,7 @@ use cortex_m_rt::entry;
 use msp432P401r_api::Dio;
 
 #[allow(unused_imports)]
-use panic_halt as _;
+use panic_semihosting as _;
 
 
 #[entry]
@@ -23,15 +23,19 @@ unsafe fn main() -> ! {
     let dio = p.dio;
     
     init_led(&dio);
-    
+
     loop {
         set_led(&dio, RED);
 
-        delay(1000000);
+        delay(50000);
+
+        let mut a = 2.0f32;
+        let b = 3.0f32;
+        a /= b;
 
         set_led(&dio, BLUE);
 
-        delay(1000000);
+        delay(50000);
     }
 }
 
@@ -48,9 +52,13 @@ fn set_led(dio: &Dio, color: u8) {
 }
 
 
-extern "C" fn delay(count: u64){
+extern "C" fn delay(count: u32){
     unsafe {
-        asm!( "2:  subs    r0, #1",
-            "    bne    2b");
+        asm!(
+            "2:  subs   {0}, #1",
+            "    bne    2b",
+            inout(reg) count => _,
+            options(nomem, nostack)
+        );
     }
 }
