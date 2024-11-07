@@ -1,0 +1,10 @@
+[workspace]
+
+members = [
+    "msp432P401r_api",
+    "main"
+]
+
+[profile.release]
+debug = true
+lto = true
