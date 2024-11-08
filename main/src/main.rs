@@ -1,64 +1,65 @@
 #![no_std]
 #![no_main]
 
-extern crate msp432P401r_api;
+extern crate cortex_m;
 extern crate cortex_m_rt;
+extern crate msp432P401r_api;
 extern crate panic_semihosting;
+extern crate uom;
+extern crate itoa;
 
-use core::arch::asm;
 use cortex_m_rt::entry;
-
-use msp432P401r_api::Dio;
-
 #[allow(unused_imports)]
 use panic_semihosting as _;
+use uom::si::f32::Time;
+use uom::si::time::second;
+
+use clock::{clock_init48mhz, wait_for_interrupt};
+use lcd::{lcd_init, lcd_out_string, lcd_set_cursor};
+use motor::{motor_drive, motor_init};
+use rgb_led::RGBLed;
+use sys_init::system_init;
+use timer_a1::timera1_init;
+
+mod clock;
+mod sys_init;
+mod rgb_led;
+mod timer_a1;
+mod peripherals;
+mod motor;
+mod spia3;
+mod lcd;
+mod ascii;
+mod tachometer;
 
 
 #[entry]
 unsafe fn main() -> ! {
-    let p = msp432P401r_api::Peripherals::steal();
+    system_init();
+    clock_init48mhz();
 
-    p.wdt_a.wdtctl().write( |w| { w.bits(0x5A80) });
-    
-    let dio = p.dio;
-    
-    init_led(&dio);
+    RGBLed::init();
 
-    loop {
-        set_led(&dio, RED);
+    timera1_init(task, Time::new::<second>(1.0));
 
-        delay(50000);
+    lcd_init();
+    lcd_set_cursor(0, 0); lcd_out_string("Hello");
+    lcd_set_cursor(0, 1); lcd_out_string("from");
+    lcd_set_cursor(0, 2); lcd_out_string("Rust!!");
+    lcd_set_cursor(0, 3); lcd_out_string(":)");
 
-        let mut a = 2.0f32;
-        let b = 3.0f32;
-        a /= b;
+    // motor_init();
+    // motor_drive(-1000, -1000);
 
-        set_led(&dio, BLUE);
-
-        delay(50000);
-    }
+    loop { wait_for_interrupt() }
 }
 
-fn init_led(dio: &Dio) {
-    dio.padir().modify(|r, w| unsafe { w.p2dir().bits(r.p2dir().bits() | 0b111) });
-}
+static mut TICKER: bool = false;
 
-const RED: u8 = 0b001;
-const GREEN: u8 = 0b010;
-const BLUE: u8 = 0b100;
-
-fn set_led(dio: &Dio, color: u8) {
-    dio.paout().modify(|r, w| unsafe { w.p2out().bits((r.p2out().bits() & !0b111) | color) });
-}
-
-
-extern "C" fn delay(count: u32){
-    unsafe {
-        asm!(
-            "2:  subs   {0}, #1",
-            "    bne    2b",
-            inout(reg) count => _,
-            options(nomem, nostack)
-        );
-    }
+unsafe fn task() {
+    RGBLed::set(match TICKER {
+        true => { RGBLed::RED }
+        false => { RGBLed::BLUE }
+    });
+    TICKER = !TICKER;
 }
