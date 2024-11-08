@@ -79,12 +79,14 @@ fn pwm_init() {
     p.timer_a0.tax_ctl().write(|w| unsafe { w.bits(0x02F0) });
 }
 
-fn pwm_duty_right(duty_permil: u16) {
+fn pwm_duty_right(mut duty_permil: u16) {
+    if duty_permil > 1000 { duty_permil = 1000; }
     let duty = min(15000, (duty_permil * 30) >> 1);
     peripherals().timer_a0.tax_ccr(3).write(|w| unsafe { w.bits(duty) });
 }
 
-fn pwm_duty_left(duty_permil: u16) {
+fn pwm_duty_left(mut duty_permil: u16) {
+    if duty_permil > 1000 { duty_permil = 1000; }
     let duty = min(15000, (duty_permil * 30) >> 1);
     peripherals().timer_a0.tax_ccr(4).write(|w| unsafe { w.bits(duty) });
 }
