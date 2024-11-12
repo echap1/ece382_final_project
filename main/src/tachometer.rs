@@ -1,7 +1,6 @@
-use uom::si::f32::Length;
-use uom::si::length::millimeter;
 use peripherals::peripherals;
 use timer_a3_input_capture::timera3_capture_init;
+use units::Length;
 
 struct WheelState {
     prev_int_time: u16,
@@ -54,8 +53,8 @@ unsafe fn right_interrupt(current_time: u16) {
 pub fn get_distances_and_clear() -> (Length, Length) {
     unsafe {
         let res = (
-            Length::new::<millimeter>(LEFT_STATE.steps as f32 * 220.0/360.0),
-            Length::new::<millimeter>(RIGHT_STATE.steps as f32 * 220.0/360.0)
+            Length::from_mm(LEFT_STATE.steps as f32 * 220.0/360.0),
+            Length::from_mm(RIGHT_STATE.steps as f32 * 220.0/360.0)
         );
         LEFT_STATE.steps = 0;
         RIGHT_STATE.steps = 0;

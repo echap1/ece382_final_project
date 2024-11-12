@@ -1,8 +1,8 @@
-use uom::si::f32::Time;
-use uom::si::time::microsecond;
-use msp432P401r_api::Interrupt as interrupt;
 use cortex_m_rt::interrupt;
+
+use msp432P401r_api::Interrupt as interrupt;
 use peripherals::{peripherals, peripherals_cortex};
+use units::Time;
 
 static mut TIMERA1_TASK: Option<unsafe fn() -> ()> = None;
 static mut DIVIDER: u32 = 1;
@@ -24,7 +24,7 @@ pub fn timera1_init(task: unsafe fn() -> (), period: Time) {
     unsafe {
         DIVIDER = 1;
         loop {
-            period_2us = period.get::<microsecond>() as u32 / (DIVIDER * 2) - 1;
+            period_2us = period.as_us() as u32 / (DIVIDER * 2) - 1;
             if period_2us > u16::MAX as u32 {
                 DIVIDER += 1;
             } else {

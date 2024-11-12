@@ -1,5 +1,6 @@
 use cortex_m::asm::delay;
 use itoa::Integer;
+
 use ascii::ASCII;
 use peripherals::peripherals;
 use spia3::{spia3_init, spia3_wait_for_tx, spia3_wait_for_tx_rx_ready, spia3_write_tx_buffer};

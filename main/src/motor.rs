@@ -1,5 +1,5 @@
 use core::cmp::min;
-use uom::num_traits::abs;
+
 use peripherals::peripherals;
 
 pub fn motor_init() {
@@ -58,8 +58,8 @@ pub fn motor_drive(duty_left: i16, duty_right: i16) {
         p.dio.pcout().modify(|r, w| unsafe { w.p5out().bits(r.p5out().bits() | 0b100000) });
     }
 
-    pwm_duty_left(abs(duty_left) as u16);
-    pwm_duty_right(abs(duty_right) as u16);
+    pwm_duty_left(duty_left.abs() as u16);
+    pwm_duty_right(duty_right.abs() as u16);
 }
 
 fn pwm_init() {

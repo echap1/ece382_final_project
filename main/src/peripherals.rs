@@ -1,6 +1,5 @@
 use msp432P401r_api::Peripherals;
 
-
 static mut PERIPHERALS: Option<Peripherals> = None;
 static mut PERIPHERALS_CORTEX: Option<cortex_m::Peripherals> = None;
 

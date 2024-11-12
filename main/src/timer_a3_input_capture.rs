@@ -1,7 +1,6 @@
-use uom::si::f32::Time;
-use uom::si::time::microsecond;
-use msp432P401r_api::Interrupt as interrupt;
 use cortex_m_rt::interrupt;
+
+use msp432P401r_api::Interrupt as interrupt;
 use peripherals::{peripherals, peripherals_cortex};
 
 type CaptureTask = unsafe fn(time: u16) -> ();

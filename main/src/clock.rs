@@ -1,4 +1,5 @@
 use core::arch::asm;
+
 use peripherals::peripherals;
 
 pub fn clock_init48mhz() {
