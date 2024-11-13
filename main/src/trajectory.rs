@@ -1,4 +1,3 @@
-use math::floor;
 use units::{Angle, AngularVelocity, Length, Time, Velocity};
 
 pub struct Trajectory<const N: usize> {
@@ -15,7 +14,7 @@ fn interp(a: f32, b: f32, a_f: f32) -> f32 {
 
 impl<const N: usize> Trajectory<N> {
     pub fn linear_interp(&self, t: Time) -> (Length, Length, Angle, Velocity, AngularVelocity) {
-        let left_idx = (floor(t.as_s() / self.step_time).max(0.0) as usize).min(N - 1);
+        let left_idx = ((t.as_s() / self.step_time) as usize).min(N - 1);
         let right_idx = (left_idx + 1).min(N - 1);
         
         let left_bias = (t.as_s() % self.step_time) / self.step_time;

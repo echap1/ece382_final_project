@@ -22,6 +22,7 @@ Cargo.lock
 trajectory_generator/.idea/
 trajectory_generator/**/*.json
 main/src/trajectories.rs
+main/trajectories/
 **/poetry.lock
 
 .DS_Store

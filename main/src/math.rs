@@ -1,3 +1,4 @@
+use core::arch::asm;
 use core::intrinsics;
 
 #[inline(always)]
@@ -8,11 +9,6 @@ pub fn sin(x: f32) -> f32 {
 #[inline(always)]
 pub fn cos(x: f32) -> f32 {
     unsafe { intrinsics::cosf32(x) }
-}
-
-#[inline(always)]
-pub fn floor(x: f32) -> f32 {
-    unsafe { intrinsics::floorf32(x) }
 }
 
 #[inline(always)]
