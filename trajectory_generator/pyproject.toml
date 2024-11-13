@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "trajectory-generator"
+version = "0.1.0"
+description = ""
+authors = ["Ethan Chapman <ethan.chapman0@outlook.com>"]
+readme = "README.md"
+packages = [{include = "trajectory_generator"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+robotpy-wpimath = "^2024.3.2.1"
+matplotlib = "^3.9.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

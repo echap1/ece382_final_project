@@ -18,13 +18,14 @@ use panic_semihosting as _;
 use clock::clock_init48mhz;
 use lcd::{lcd_init, lcd_out_number, lcd_set_cursor};
 use motor::{motor_drive, motor_init};
-use odometry::{odometry_get_state, odometry_init, odometry_update};
-use pid::pid_compute_duty;
+use odometry::{odometry_get_state, odometry_init, odometry_update, Pose, to_wheel_speeds};
+use pid::PIController;
 use rgb_led::RGBLed;
 use sys_init::system_init;
-use tachometer::{get_distances_and_clear, tachometer_init};
+use tachometer::{get_distances_and_clear, get_speeds, tachometer_init};
 use timer_a1::timera1_init;
-use units::{AngularVelocity, Time, Velocity};
+use trajectories::TRAJECTORY;
+use units::{Angle, AngularVelocity, Time, Velocity};
 
 mod clock;
 mod sys_init;
@@ -42,6 +43,8 @@ mod pid;
 mod ramsete;
 mod units;
 mod math;
+mod trajectory;
+mod trajectories;
 
 
 #[entry]
@@ -64,9 +67,9 @@ unsafe fn main() -> ! {
     loop {
         let state = odometry_get_state();
         lcd_set_cursor(0, 0);
-        lcd_out_number(state.pose.x.as_m() as i32, 5);
+        lcd_out_number(state.pose.x.as_mm() as i32, 5);
         lcd_set_cursor(0, 1);
-        lcd_out_number(state.pose.y.as_m() as i32, 5);
+        lcd_out_number(state.pose.y.as_mm() as i32, 5);
         lcd_set_cursor(0, 2);
         lcd_out_number(state.pose.theta.as_deg() as i32, 5);
         lcd_set_cursor(0, 3);
@@ -76,15 +79,35 @@ unsafe fn main() -> ! {
     }
 }
 
+static mut ELAPSED: Time = Time::from_s(0f32);
+
+static mut LEFT: PIController = PIController::new();
+static mut RIGHT: PIController = PIController::new();
+
 unsafe fn task() {
     let (l, r) = get_distances_and_clear();
-    odometry_update(l, r, Time::from_ms(20.0));
+    let (vl, vr) = get_speeds();
+    odometry_update(l, r, vl, vr, Time::from_ms(20.0));
 
-    let setpoint = Velocity::from_mm_per_sec(300.0);
+    let p = unsafe { TRAJECTORY.linear_interp(ELAPSED) };
 
     let state = odometry_get_state();
+
+    let trajectory_out = ramsete::compute(&state.pose, &Pose {
+        x: p.0,
+        y: p.1,
+        theta: p.2
+    }, p.3, p.4);
     
-    let a = ramsete::compute(&state.pose, &state.pose, setpoint, AngularVelocity::from_rad_per_s(0.0));
+    let (l_speed, r_speed) = to_wheel_speeds(trajectory_out.0, trajectory_out.1);
     
-    motor_drive(pid_compute_duty(setpoint, state.l_vel), pid_compute_duty(setpoint, state.r_vel));
+    // let l_speed = Velocity::from_m_per_sec(0.5);
+    // let r_speed = Velocity::from_m_per_sec(0.5);
+    
+    let l = unsafe { LEFT.compute(l_speed.as_m_per_sec(), state.l_vel.as_m_per_sec()) };
+    let r = unsafe { RIGHT.compute(r_speed.as_m_per_sec(), state.l_vel.as_m_per_sec()) };
+
+    motor_drive(l as i16, r as i16);
+    
+    *ELAPSED.as_s_mut() += Time::from_ms(20.0).as_s();
 }

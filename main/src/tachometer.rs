@@ -1,6 +1,6 @@
 use peripherals::peripherals;
 use timer_a3_input_capture::timera3_capture_init;
-use units::Length;
+use units::{Length, Velocity};
 
 struct WheelState {
     prev_int_time: u16,
@@ -30,6 +30,11 @@ impl WheelState {
             self.steps -= 1;
         }
     }
+    
+    fn calc_speed(&self) -> Velocity {
+        let period_2_3_us = self.current_int_time - self.prev_int_time;
+        Velocity::from_m_per_sec(916.666_7/*(220/360)/(2e-6/3)/1000*/ / period_2_3_us as f32)
+    }
 }
 
 pub fn tachometer_init() {
@@ -58,6 +63,12 @@ pub fn get_distances_and_clear() -> (Length, Length) {
         );
         LEFT_STATE.steps = 0;
         RIGHT_STATE.steps = 0;
-        return res;
+        res
+    }
+}
+
+pub fn get_speeds() -> (Velocity, Velocity) {
+    unsafe {
+        (LEFT_STATE.calc_speed(), RIGHT_STATE.calc_speed())
     }
 }

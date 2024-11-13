@@ -1,4 +1,5 @@
-use units::{Angle, Length, Time, Velocity};
+use math::{cos, sin};
+use units::{Angle, AngularVelocity, Length, Time, Velocity};
 
 pub struct Pose {
     pub x: Length,
@@ -38,19 +39,23 @@ pub fn odometry_init() {
     }
 }
 
-pub fn odometry_update(l_dist: Length, r_dist: Length, elapsed: Time) {
+pub fn odometry_update(l_dist: Length, r_dist: Length, vl: Velocity, vr: Velocity, elapsed: Time) {
     let state = unsafe { &mut STATE };
 
     let d_avg_m = (l_dist.as_m() + r_dist.as_m()) / 2.0;
 
     let delta_theta = (r_dist.as_m() - l_dist.as_m()) / WHEEL_DIST.as_m();
     *state.pose.theta.as_rad_mut() += delta_theta;
-    // let (sin_theta, cos_theta) = libm::sincosf(state.pose.theta.get::<radian>());
-    let (sin_theta, cos_theta) = (0.,0.);
-    *state.pose.x.as_m_mut() += d_avg_m * cos_theta;
-    *state.pose.y.as_m_mut() += d_avg_m * sin_theta;
-    *state.l_vel.as_m_per_sec_mut() = l_dist.as_m() / elapsed.as_s();
-    *state.r_vel.as_m_per_sec_mut() = r_dist.as_m() / elapsed.as_s();
+    
+    *state.pose.x.as_m_mut() += d_avg_m * cos(state.pose.theta.as_rad());
+    *state.pose.y.as_m_mut() += d_avg_m * sin(state.pose.theta.as_rad());
+    *state.l_vel.as_m_per_sec_mut() = vl.as_m_per_sec();
+    *state.r_vel.as_m_per_sec_mut() = vr.as_m_per_sec();
+}
+
+pub fn to_wheel_speeds(v: Velocity, omega: AngularVelocity) -> (Velocity, Velocity) {
+    let diff = omega.as_rad_per_s() * WHEEL_DIST.as_m() / 2.0;
+    (Velocity::from_m_per_sec(v.as_m_per_sec() - diff), Velocity::from_m_per_sec(v.as_m_per_sec() + diff))
 }
 
 pub fn odometry_get_state() -> &'static RobotState {

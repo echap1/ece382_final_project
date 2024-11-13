@@ -11,6 +11,11 @@ pub fn cos(x: f32) -> f32 {
 }
 
 #[inline(always)]
+pub fn floor(x: f32) -> f32 {
+    unsafe { intrinsics::floorf32(x) }
+}
+
+#[inline(always)]
 pub fn sqrt(x: f32) -> f32 {
     unsafe { intrinsics::sqrtf32(x) }
 }

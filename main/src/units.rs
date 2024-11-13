@@ -24,6 +24,7 @@ impl Length {
 
     #[inline(always)] pub const fn as_m(&self) -> f32 { self.0 }
     #[inline(always)] pub fn as_m_mut(&mut self) -> &mut f32 { &mut self.0 }
+    #[inline(always)] pub fn as_mm(&self) -> f32 { self.0 * 1000.0 }
 }
 
 
@@ -60,7 +61,7 @@ impl Angle {
 pub struct AngularVelocity(f32);
 
 impl AngularVelocity {
-    #[inline(always)] pub const fn from_rad_per_s(t: f32) -> Self { Self(t) }
+    #[inline(always)] pub const fn from_rad_per_sec(t: f32) -> Self { Self(t) }
     #[inline(always)] pub fn from_deg_per_s(t: f32) -> Self { Self(t * 0.017453) }
 
     #[inline(always)] pub const fn as_rad_per_s(&self) -> f32 { self.0 }
