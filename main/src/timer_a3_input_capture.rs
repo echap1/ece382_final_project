@@ -1,7 +1,8 @@
 use cortex_m_rt::interrupt;
 
 use msp432P401r_api::Interrupt as interrupt;
-use peripherals::{peripherals, peripherals_cortex};
+
+use crate::peripherals::{peripherals, peripherals_cortex};
 
 type CaptureTask = unsafe fn(time: u16) -> ();
 static mut CAPTURE_TASK_0: Option<CaptureTask> = None;

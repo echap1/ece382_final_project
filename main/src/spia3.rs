@@ -1,4 +1,4 @@
-use peripherals::peripherals;
+use crate::peripherals::peripherals;
 
 pub fn spia3_init() {
     let p = peripherals();

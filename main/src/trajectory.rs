@@ -1,4 +1,4 @@
-use units::{Angle, AngularVelocity, Length, Time, Velocity};
+use crate::units::{Angle, AngularVelocity, Length, Time, Velocity};
 
 pub struct Trajectory<const N: usize> {
     pub total_time: f32,

@@ -1,6 +1,6 @@
 use core::cmp::min;
 
-use peripherals::peripherals;
+use crate::peripherals::peripherals;
 
 pub fn motor_init() {
     let p = peripherals();

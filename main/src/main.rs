@@ -8,24 +8,23 @@ extern crate cortex_m_rt;
 extern crate itoa;
 extern crate msp432P401r_api;
 extern crate panic_semihosting;
-
-use core::intrinsics;
+extern crate ryu;
 
 use cortex_m_rt::entry;
 #[allow(unused_imports)]
 use panic_semihosting as _;
 
-use clock::clock_init48mhz;
-use lcd::{lcd_init, lcd_out_number, lcd_set_cursor};
+use clock::{clock_init48mhz, delay_1ms};
+use lcd::{lcd_clear, lcd_init, lcd_out_float, lcd_out_number, lcd_set_cursor};
 use motor::{motor_brake, motor_drive, motor_init};
 use odometry::{odometry_get_state, odometry_init, odometry_update, Pose, to_wheel_speeds};
-use pid::PIController;
+use pid::PIDFController;
 use rgb_led::RGBLed;
 use sys_init::system_init;
 use tachometer::{get_distances_and_clear, get_speeds, tachometer_init};
 use timer_a1::timera1_init;
 use trajectories::TRAJECTORY;
-use units::{Angle, AngularVelocity, Time, Velocity};
+use units::Time;
 
 mod clock;
 mod sys_init;
@@ -46,7 +45,6 @@ mod math;
 mod trajectory;
 mod trajectories;
 
-
 #[entry]
 unsafe fn main() -> ! {
     system_init();
@@ -62,28 +60,41 @@ unsafe fn main() -> ! {
 
     // loop { wait_for_interrupt() }
 
-    unsafe { intrinsics::sinf32(1.0); }
+    let mut l_sum = 0f32;
+    let mut r_sum = 0f32;
+    let mut l_amt = 0u32;
+    let mut r_amt = 0u32;
 
     loop {
         let state = odometry_get_state();
+
+        l_sum += state.l_vel.as_m_per_sec();
+        r_sum += state.r_vel.as_m_per_sec();
+        l_amt += 1;
+        r_amt += 1;
+
+        lcd_clear();
         lcd_set_cursor(0, 0);
-        lcd_out_number(state.pose.x.as_mm() as i32, 5);
+        lcd_out_number(state.pose.x.as_mm() as i32, 0);
         lcd_set_cursor(0, 1);
-        lcd_out_number(state.pose.y.as_mm() as i32, 5);
+        lcd_out_number(state.pose.y.as_mm() as i32, 0);
         lcd_set_cursor(0, 2);
-        lcd_out_number(state.pose.theta.as_deg() as i32, 5);
+        lcd_out_float(state.l_vel.as_m_per_sec(), 0);
         lcd_set_cursor(0, 3);
-        lcd_out_number(state.l_vel.as_mm_per_sec() as i32, 5);
+        lcd_out_float(state.r_vel.as_m_per_sec(), 0);
         lcd_set_cursor(0, 4);
-        lcd_out_number(state.r_vel.as_mm_per_sec() as i32, 5);
+        lcd_out_float(l_sum / l_amt as f32, 0);
+        lcd_set_cursor(0, 5);
+        lcd_out_float(r_sum / r_amt as f32, 0);
+        delay_1ms(1000);
     }
 }
 
 static mut ELAPSED: Time = Time::from_s(0f32);
 static mut LOOP_TIME: Time = Time::from_s(0.005);
 
-static mut LEFT: PIController = PIController::new();
-static mut RIGHT: PIController = PIController::new();
+static mut LEFT: PIDFController = PIDFController::new();
+static mut RIGHT: PIDFController = PIDFController::new();
 
 unsafe fn task() {
     let (l, r) = get_distances_and_clear();

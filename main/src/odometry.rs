@@ -1,5 +1,5 @@
-use math::{cos, sin};
-use units::{Angle, AngularVelocity, Length, Time, Velocity};
+use crate::math::sin_cos;
+use crate::units::{Angle, AngularVelocity, Length, Time, Velocity};
 
 pub struct Pose {
     pub x: Length,
@@ -47,8 +47,9 @@ pub fn odometry_update(l_dist: Length, r_dist: Length, vl: Velocity, vr: Velocit
     let delta_theta = (r_dist.as_m() - l_dist.as_m()) / WHEEL_DIST.as_m();
     *state.pose.theta.as_rad_mut() += delta_theta;
     
-    *state.pose.x.as_m_mut() += d_avg_m * cos(state.pose.theta.as_rad());
-    *state.pose.y.as_m_mut() += d_avg_m * sin(state.pose.theta.as_rad());
+    let (sin_theta, cos_theta) = sin_cos(state.pose.theta.as_rad());
+    *state.pose.x.as_m_mut() += d_avg_m * cos_theta;
+    *state.pose.y.as_m_mut() += d_avg_m * sin_theta;
     *state.l_vel.as_m_per_sec_mut() = vl.as_m_per_sec();
     *state.r_vel.as_m_per_sec_mut() = vr.as_m_per_sec();
 }

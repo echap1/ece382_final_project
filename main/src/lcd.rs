@@ -1,9 +1,10 @@
 use cortex_m::asm::delay;
 use itoa::Integer;
+use ryu::Float;
 
-use ascii::ASCII;
-use peripherals::peripherals;
-use spia3::{spia3_init, spia3_wait_for_tx, spia3_wait_for_tx_rx_ready, spia3_write_tx_buffer};
+use crate::ascii::ASCII;
+use crate::peripherals::peripherals;
+use crate::spia3::{spia3_init, spia3_wait_for_tx, spia3_wait_for_tx_rx_ready, spia3_write_tx_buffer};
 
 const SCREEN_W: u8 = 84;
 const SCREEN_H: u8 = 48;
@@ -65,6 +66,18 @@ pub fn lcd_out_string(string: &str) {
     for c in string.bytes() {
         lcd_out_char(c);
     }
+}
+
+pub fn lcd_out_float<N: Float>(n: N, min_length: usize) {
+    let mut buf = ryu::Buffer::new();
+    let s = buf.format(n);
+    let s_len = s.len();
+    if s_len < min_length {
+        for _ in 0..min_length - s_len {
+            lcd_out_char(b' ');
+        }
+    }
+    lcd_out_string(s);
 }
 
 pub fn lcd_out_number<N: Integer>(n: N, min_length: usize) {

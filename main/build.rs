@@ -26,7 +26,7 @@ fn main() {
     });
     
     let code = quote! {
-        use trajectory::Trajectory; 
+        use crate::trajectory::Trajectory; 
         
         pub static TRAJECTORY: Trajectory<#trajectory_len> = Trajectory {
             total_time: #trajectory_total_time,

@@ -1,8 +1,9 @@
 use cortex_m_rt::interrupt;
 
 use msp432P401r_api::Interrupt as interrupt;
-use peripherals::{peripherals, peripherals_cortex};
-use units::Time;
+
+use crate::peripherals::{peripherals, peripherals_cortex};
+use crate::units::Time;
 
 static mut TIMERA1_TASK: Option<unsafe fn() -> ()> = None;
 static mut DIVIDER: u32 = 1;

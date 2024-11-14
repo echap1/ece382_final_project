@@ -1,6 +1,6 @@
 use core::arch::asm;
 
-use peripherals::peripherals;
+use crate::peripherals::peripherals;
 
 pub fn clock_init48mhz() {
     let p = peripherals();

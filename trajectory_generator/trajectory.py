@@ -1,17 +1,23 @@
 import json
 import math
 
+from wpimath._controls._controls.constraint import TrajectoryConstraint
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
+from wpimath.kinematics import DifferentialDriveKinematics
 from wpimath.trajectory import TrajectoryGenerator, TrajectoryConfig
 import matplotlib.pyplot as plt
 
+cfg = TrajectoryConfig(0.2, 0.04)
+cfg.setKinematics(DifferentialDriveKinematics(0.14))
+cfg.setStartVelocity(0.025)
+cfg.setEndVelocity(0.025)
 
 trajectory = TrajectoryGenerator.generateTrajectory(
     Pose2d(0, 0, Rotation2d.fromDegrees(0)),
-    [],
-    # [Translation2d(1.5, 0.8)],
-    Pose2d(3, 0, Rotation2d.fromDegrees(0)),
-    TrajectoryConfig.fromFps(2.0, 0.5),
+    # [],
+    [Translation2d(2, -0.3)],
+    Pose2d(2.3, -1, Rotation2d.fromDegrees(-90)),
+    cfg
 )
 
 samples = 300

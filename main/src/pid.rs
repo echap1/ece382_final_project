@@ -1,6 +1,7 @@
-const K_P: f32 = 2000.0;
-const K_I: f32 = 50.0;
-const K_D: f32 = 0.0;
+const K_P: f32 = 50.0;
+const K_I: f32 = 5.0;
+const K_D: f32 = -10.0;
+const K_F: f32 = 1070.0;
 
 const PREV_WINDOW: usize = 3;
 const WINDOW_GAP: usize = 2;
@@ -8,7 +9,7 @@ const CURRENT_WINDOW: usize = 3;
 const BUF_SIZE: usize = PREV_WINDOW + WINDOW_GAP + CURRENT_WINDOW;
 
 
-pub struct PIController {
+pub struct PIDFController {
     accum_error: f32,
     d_buf: [f32; BUF_SIZE],
     buf_idx: usize,
@@ -16,7 +17,7 @@ pub struct PIController {
     current_sum: f32,
 }
 
-impl PIController {
+impl PIDFController {
     pub const fn new() -> Self {
         Self {
             accum_error: 0.0,
@@ -44,6 +45,6 @@ impl PIController {
             self.accum_error * K_I
         };
 
-        error * K_P + i_val + d_gain * K_D
+        error * K_P + i_val + d_gain * K_D + setpoint * K_F
     }
 }

@@ -1,5 +1,6 @@
 use msp432P401r_api::Dio;
-use peripherals::peripherals;
+
+use crate::peripherals::peripherals;
 
 pub struct RGBLed<'l> {
     dio: &'l Dio

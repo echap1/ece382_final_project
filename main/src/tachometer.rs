@@ -1,7 +1,6 @@
-use core::ops::Neg;
-use peripherals::peripherals;
-use timer_a3_input_capture::timera3_capture_init;
-use units::{Length, Velocity};
+use crate::peripherals::peripherals;
+use crate::timer_a3_input_capture::timera3_capture_init;
+use crate::units::{Length, Velocity};
 
 struct WheelState {
     prev_int_time: u16,
