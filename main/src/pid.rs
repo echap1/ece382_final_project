@@ -1,5 +1,5 @@
-const K_P: f32 = 2500.0;
-const K_I: f32 = 500.0;
+const K_P: f32 = 2000.0;
+const K_I: f32 = 50.0;
 const K_D: f32 = 0.0;
 
 const PREV_WINDOW: usize = 3;
@@ -34,11 +34,16 @@ impl PIController {
         self.prev_sum += self.d_buf[(self.buf_idx + PREV_WINDOW) % BUF_SIZE] - self.d_buf[self.buf_idx];
         self.current_sum += error - self.d_buf[(self.buf_idx + (BUF_SIZE - CURRENT_WINDOW)) % BUF_SIZE];
         self.d_buf[self.buf_idx] = error;
-        
-        let d_gain = ((self.current_sum / CURRENT_WINDOW as f32) - (self.prev_sum / PREV_WINDOW as f32)) / (WINDOW_GAP as f32 + 0.5 * (CURRENT_WINDOW + PREV_WINDOW) as f32);
-        
-        self.accum_error += error;
 
-        error * K_P + self.accum_error * K_I + d_gain * K_D
+        let d_gain = ((self.current_sum / CURRENT_WINDOW as f32) - (self.prev_sum / PREV_WINDOW as f32)) / (WINDOW_GAP as f32 + 0.5 * (CURRENT_WINDOW + PREV_WINDOW) as f32);
+
+        let i_val = if error > 0.2 {
+            0.0
+        } else {
+            self.accum_error += error;
+            self.accum_error * K_I
+        };
+
+        error * K_P + i_val + d_gain * K_D
     }
 }

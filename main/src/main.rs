@@ -17,7 +17,7 @@ use panic_semihosting as _;
 
 use clock::clock_init48mhz;
 use lcd::{lcd_init, lcd_out_number, lcd_set_cursor};
-use motor::{motor_drive, motor_init};
+use motor::{motor_brake, motor_drive, motor_init};
 use odometry::{odometry_get_state, odometry_init, odometry_update, Pose, to_wheel_speeds};
 use pid::PIController;
 use rgb_led::RGBLed;
@@ -53,7 +53,7 @@ unsafe fn main() -> ! {
     clock_init48mhz();
 
     RGBLed::init();
-    timera1_init(task, Time::from_ms(20.0));
+    timera1_init(task, LOOP_TIME);
 
     lcd_init();
     motor_init();
@@ -80,6 +80,7 @@ unsafe fn main() -> ! {
 }
 
 static mut ELAPSED: Time = Time::from_s(0f32);
+static mut LOOP_TIME: Time = Time::from_s(0.005);
 
 static mut LEFT: PIController = PIController::new();
 static mut RIGHT: PIController = PIController::new();
@@ -87,27 +88,31 @@ static mut RIGHT: PIController = PIController::new();
 unsafe fn task() {
     let (l, r) = get_distances_and_clear();
     let (vl, vr) = get_speeds();
-    odometry_update(l, r, vl, vr, Time::from_ms(20.0));
-
-    let p = unsafe { TRAJECTORY.linear_interp(ELAPSED) };
-
-    let state = odometry_get_state();
-
-    let trajectory_out = ramsete::compute(&state.pose, &Pose {
-        x: p.0,
-        y: p.1,
-        theta: p.2
-    }, p.3, p.4);
+    odometry_update(l, r, vl, vr, LOOP_TIME);
     
-    let (l_speed, r_speed) = to_wheel_speeds(trajectory_out.0, trajectory_out.1);
-    
-    // let l_speed = Velocity::from_m_per_sec(0.5);
-    // let r_speed = Velocity::from_m_per_sec(0.5);
-    
-    let l = unsafe { LEFT.compute(l_speed.as_m_per_sec(), state.l_vel.as_m_per_sec()) };
-    let r = unsafe { RIGHT.compute(r_speed.as_m_per_sec(), state.l_vel.as_m_per_sec()) };
+    if ELAPSED.as_s() > TRAJECTORY.total_time {
+        motor_brake();
+    } else {
+        let p = unsafe { TRAJECTORY.linear_interp(ELAPSED) };
 
-    motor_drive(l as i16, r as i16);
+        let state = odometry_get_state();
+
+        let trajectory_out = ramsete::compute(&state.pose, &Pose {
+            x: p.0,
+            y: p.1,
+            theta: p.2
+        }, p.3, p.4);
+
+        let (l_speed, r_speed) = to_wheel_speeds(trajectory_out.0, trajectory_out.1);
+
+        // let l_speed = Velocity::from_m_per_sec(0.5);
+        // let r_speed = Velocity::from_m_per_sec(0.5);
+
+        let l = unsafe { LEFT.compute(l_speed.as_m_per_sec(), state.l_vel.as_m_per_sec()) };
+        let r = unsafe { RIGHT.compute(r_speed.as_m_per_sec(), state.l_vel.as_m_per_sec()) };
+
+        motor_drive(l as i16, r as i16);
+    }
     
-    *ELAPSED.as_s_mut() += Time::from_ms(20.0).as_s();
+    *ELAPSED.as_s_mut() += LOOP_TIME.as_s();
 }

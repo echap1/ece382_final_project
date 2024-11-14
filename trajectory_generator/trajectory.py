@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 
 trajectory = TrajectoryGenerator.generateTrajectory(
     Pose2d(0, 0, Rotation2d.fromDegrees(0)),
-    [Translation2d(1.5, 0.8)],
+    [],
+    # [Translation2d(1.5, 0.8)],
     Pose2d(3, 0, Rotation2d.fromDegrees(0)),
     TrajectoryConfig.fromFps(2.0, 0.5),
 )

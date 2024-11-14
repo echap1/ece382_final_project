@@ -58,8 +58,8 @@ pub fn motor_drive(duty_left: i16, duty_right: i16) {
         p.dio.pcout().modify(|r, w| unsafe { w.p5out().bits(r.p5out().bits() | 0b100000) });
     }
 
-    pwm_duty_left(duty_left.abs() as u16);
-    pwm_duty_right(duty_right.abs() as u16);
+    pwm_duty_left(duty_left.unsigned_abs());
+    pwm_duty_right(duty_right.unsigned_abs());
 }
 
 fn pwm_init() {

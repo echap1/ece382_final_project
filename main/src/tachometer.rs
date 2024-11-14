@@ -1,3 +1,4 @@
+use core::ops::Neg;
 use peripherals::peripherals;
 use timer_a3_input_capture::timera3_capture_init;
 use units::{Length, Velocity};
@@ -6,24 +7,28 @@ struct WheelState {
     prev_int_time: u16,
     current_int_time: u16,
     steps: i32,
+    is_forward: bool
 }
 
 static mut LEFT_STATE: WheelState = WheelState {
     prev_int_time: 0,
     current_int_time: 0,
     steps: 0,
+    is_forward: true
 };
 
 static mut RIGHT_STATE: WheelState = WheelState {
     prev_int_time: 0,
     current_int_time: 0,
     steps: 0,
+    is_forward: true
 };
 
 impl WheelState {
     fn update(&mut self, current_time: u16, is_forward: bool) {
         self.prev_int_time = self.current_int_time;
         self.current_int_time = current_time;
+        self.is_forward = is_forward;
         if is_forward {
             self.steps += 1;
         } else {
@@ -32,8 +37,13 @@ impl WheelState {
     }
     
     fn calc_speed(&self) -> Velocity {
-        let period_2_3_us = self.current_int_time - self.prev_int_time;
-        Velocity::from_m_per_sec(916.666_7/*(220/360)/(2e-6/3)/1000*/ / period_2_3_us as f32)
+        let period_2_3_us = self.current_int_time.wrapping_sub(self.prev_int_time);
+        if period_2_3_us == 0 { 
+            Velocity::from_m_per_sec(0.0)
+        } else {
+            let v = 916.666_7/*(220/360)/(2e-6/3)/1000*/ / period_2_3_us as f32;
+            Velocity::from_m_per_sec(if self.is_forward { v } else { -v })
+        }
     }
 }
 

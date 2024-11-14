@@ -2,8 +2,8 @@ use math::{cos, sin, sqrt};
 use odometry::Pose;
 use units::{AngularVelocity, Velocity};
 
-const K_BETA: f32 = 4.0;
-const K_ZETA: f32 = 0.9;
+const K_BETA: f32 = 3.0;
+const K_ZETA: f32 = 0.7;
 
 pub fn compute(current: &Pose, desired: &Pose, v_d: Velocity, omega_d: AngularVelocity) -> (Velocity, AngularVelocity) {
     // Error in global ref frame
