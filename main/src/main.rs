@@ -25,6 +25,10 @@ use tachometer::{get_distances_and_clear, get_speeds, tachometer_init};
 use timer_a1::timera1_init;
 use trajectories::TRAJECTORY;
 use units::Time;
+use crate::drive_to_point::drive_to_point;
+use crate::math::{abs, atan2, normalize_angle_rad};
+use crate::odometry::RobotState;
+use crate::units::{Angle, AngularVelocity, Length, Velocity};
 
 mod clock;
 mod sys_init;
@@ -44,6 +48,7 @@ mod units;
 mod math;
 mod trajectory;
 mod trajectories;
+mod drive_to_point;
 
 #[entry]
 unsafe fn main() -> ! {
@@ -101,6 +106,22 @@ unsafe fn task() {
     let (vl, vr) = get_speeds();
     odometry_update(l, r, vl, vr, LOOP_TIME);
     
+    let state = odometry_get_state();
+    
+    drive_to_point(Length::from_m(5.0), Length::from_m(0.0), Angle::from_deg(15.0), state);
+    
+    *ELAPSED.as_s_mut() += LOOP_TIME.as_s();
+}
+
+
+fn drive_motor(l: Velocity, r: Velocity, state: &RobotState) {
+    let l = unsafe { LEFT.compute(l.as_m_per_sec(), state.l_vel.as_m_per_sec()) };
+    let r = unsafe { RIGHT.compute(r.as_m_per_sec(), state.l_vel.as_m_per_sec()) };
+
+    motor_drive(l as i16, r as i16);
+}
+
+unsafe fn follow_trajectory() {
     if ELAPSED.as_s() > TRAJECTORY.total_time {
         motor_brake();
     } else {
@@ -119,11 +140,6 @@ unsafe fn task() {
         // let l_speed = Velocity::from_m_per_sec(0.5);
         // let r_speed = Velocity::from_m_per_sec(0.5);
 
-        let l = unsafe { LEFT.compute(l_speed.as_m_per_sec(), state.l_vel.as_m_per_sec()) };
-        let r = unsafe { RIGHT.compute(r_speed.as_m_per_sec(), state.l_vel.as_m_per_sec()) };
-
-        motor_drive(l as i16, r as i16);
+        drive_motor(l_speed, r_speed, state);
     }
-    
-    *ELAPSED.as_s_mut() += LOOP_TIME.as_s();
 }

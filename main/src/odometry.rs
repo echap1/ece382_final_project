@@ -46,7 +46,7 @@ pub fn odometry_update(l_dist: Length, r_dist: Length, vl: Velocity, vr: Velocit
 
     let delta_theta = (r_dist.as_m() - l_dist.as_m()) / WHEEL_DIST.as_m();
     *state.pose.theta.as_rad_mut() += delta_theta;
-    
+
     let (sin_theta, cos_theta) = sin_cos(state.pose.theta.as_rad());
     *state.pose.x.as_m_mut() += d_avg_m * cos_theta;
     *state.pose.y.as_m_mut() += d_avg_m * sin_theta;
