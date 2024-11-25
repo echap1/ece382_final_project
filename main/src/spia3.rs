@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::peripherals::peripherals;
 
 pub fn spia3_init() {

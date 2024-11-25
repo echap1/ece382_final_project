@@ -1,12 +1,9 @@
-use msp432P401r_api::Dio;
-
 use crate::peripherals::peripherals;
 
-pub struct RGBLed<'l> {
-    dio: &'l Dio
-}
+pub struct RGBLed;
 
-impl<'l> RGBLed<'l> {
+impl RGBLed {
+    pub const OFF: u8 = 0b000;
     pub const RED: u8 = 0b001;
     pub const GREEN: u8 = 0b010;
     pub const BLUE: u8 = 0b100;

@@ -1,5 +1,5 @@
 use crate::math::sin_cos;
-use crate::units::{Angle, AngularVelocity, Length, Time, Velocity};
+use crate::units::{Angle, AngularVelocity, Length, Velocity};
 
 pub struct Pose {
     pub x: Length,
@@ -39,7 +39,7 @@ pub fn odometry_init() {
     }
 }
 
-pub fn odometry_update(l_dist: Length, r_dist: Length, vl: Velocity, vr: Velocity, elapsed: Time) {
+pub fn odometry_update(l_dist: Length, r_dist: Length, vl: Velocity, vr: Velocity) {
     let state = unsafe { &mut STATE };
 
     let d_avg_m = (l_dist.as_m() + r_dist.as_m()) / 2.0;

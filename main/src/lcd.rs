@@ -55,6 +55,7 @@ pub fn lcd_init() {
 }
 
 pub fn lcd_out_char(data: u8) {
+    if data < 0x20 { return; }
     data_write(0x00);
     for i in 0..5 {
         data_write(ASCII[data as usize - 0x20][i]);
@@ -64,6 +65,7 @@ pub fn lcd_out_char(data: u8) {
 
 pub fn lcd_out_string(string: &str) {
     for c in string.bytes() {
+        if c == 0 { return }
         lcd_out_char(c);
     }
 }

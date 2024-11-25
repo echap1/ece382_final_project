@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use core::cmp::min;
 
 use crate::peripherals::peripherals;
