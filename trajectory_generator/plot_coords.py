@@ -21,7 +21,11 @@ boundaries = [
     (15, -1, 15, 11),
     (15, 11, 9, 11),
     (9, 11, 9, 3),
-    (9, 3, -1, 3),
+    (9, 3, 7, 3),
+    (7, 3, 7, 5),
+    (7, 5, 5, 5),
+    (5, 5, 5, 3),
+    (5, 3, -1, 3),
 ]
 
 for x, y in csv.reader(open('coords.csv')):
@@ -39,4 +43,4 @@ plt.title("Level 1 Robot Position")
 plt.xlabel("X (mm)")
 plt.ylabel("Y (mm)")
 plt.show()
-fig.savefig('level1.png')
+fig.savefig('level1.png', dpi=500)
