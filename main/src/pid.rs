@@ -1,3 +1,9 @@
+use crate::{ELAPSED, LEFT, ramsete, RIGHT};
+use crate::motor::{motor_brake, motor_drive};
+use crate::odometry::{odometry_get_state, Pose, RobotState, to_wheel_speeds};
+use crate::trajectories::TRAJECTORY;
+use crate::units::Velocity;
+
 const K_P: f32 = 50.0;
 const K_I: f32 = 5.0;
 const K_D: f32 = -10.0;
@@ -46,5 +52,35 @@ impl PIDFController {
         };
 
         error * K_P + i_val + d_gain * K_D + setpoint * K_F
+    }
+}
+
+pub fn drive_motor(l: Velocity, r: Velocity, state: &RobotState) {
+    let l = unsafe { LEFT.compute(l.as_m_per_sec(), state.l_vel.as_m_per_sec()) };
+    let r = unsafe { RIGHT.compute(r.as_m_per_sec(), state.l_vel.as_m_per_sec()) };
+
+    motor_drive(l as i16, r as i16);
+}
+#[allow(dead_code)]
+unsafe fn follow_trajectory() {
+    if ELAPSED.as_s() > TRAJECTORY.total_time {
+        motor_brake();
+    } else {
+        let p = unsafe { TRAJECTORY.linear_interp(ELAPSED) };
+
+        let state = odometry_get_state();
+
+        let trajectory_out = ramsete::compute(&state.pose, &Pose {
+            x: p.0,
+            y: p.1,
+            theta: p.2
+        }, p.3, p.4);
+
+        let (l_speed, r_speed) = to_wheel_speeds(trajectory_out.0, trajectory_out.1);
+
+        // let l_speed = Velocity::from_m_per_sec(0.5);
+        // let r_speed = Velocity::from_m_per_sec(0.5);
+
+        drive_motor(l_speed, r_speed, state);
     }
 }

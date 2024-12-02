@@ -13,6 +13,20 @@ pub struct RobotState {
     pub r_vel: Velocity,
 }
 
+#[derive(Debug)]
+pub enum GlobalDirection {
+    PositiveX,
+    NegativeX,
+    PositiveY,
+    NegativeY
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum RobotDirection {
+    Forward,
+    Backward
+}
+
 static mut STATE: RobotState = RobotState {
     pose: Pose {
         x: Length::from_m(0.0),
