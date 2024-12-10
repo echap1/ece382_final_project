@@ -26,16 +26,18 @@ impl<T, const SIZE: usize> MovingAverage<T, SIZE> where T: MovingAverageNumber {
         } 
         
         self.data[self.next_idx] = MaybeUninit::new(new_data);
+
+        self.next_idx = (self.next_idx + 1) % SIZE;
         
-        let res = if self.filled {
+        if self.next_idx == 0 {
+            self.filled = true;
+        }
+        
+        if self.filled {
             self.sum.div_by_usize(SIZE)
         } else {
             self.sum.div_by_usize(self.next_idx)
-        };
-        
-        self.next_idx += 1;
-        
-        res
+        }
     }
 }
 

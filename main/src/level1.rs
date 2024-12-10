@@ -32,18 +32,24 @@ static mut STATE: Level1State = Level1State::Navigating {
     reference_pos: Length::from_m(0.0)
 };
 
+/// Positions where the Robot turned. Used for backtracking.
 static mut POSITIONS: BufferStack<(Length, Length), 100> = BufferStack::new();
+
+/// Position buffer that is sent over UART after maze navigation. It's only a stack because I didn't want to implement a new data type.
 static mut STATE_BUF: BufferStack<(Length, Length), 2000> = BufferStack::new();
 
 pub unsafe fn level1_main() -> ! {
+    // Push the start position as the last position to return to when backtracking.
     POSITIONS.push((Length::from_m(0.0), Length::from_m(0.0)));
 
     let mut transmitted = false;
 
     loop {
+        // Push coordinate data every ~100ms
         let state = odometry_get_state();
         STATE_BUF.push((state.pose.x, state.pose.y));
 
+        // Print our state
         let mut buf = [0; 12];
         lcd_clear();
         match &STATE {
@@ -78,13 +84,15 @@ pub unsafe fn level1_main() -> ! {
                 lcd_set_cursor(0, 0);
                 lcd_out_string("Done");
 
+                // Transmit the data 60 seconds after completion
                 if !transmitted && ELAPSED.as_s() - t.as_s() > 60.0 {
                     transmitted = true;
                     let mut buf2 = [0; 100];
                     while let Some(s) = STATE_BUF.pop() {
+                        // I love the rust write macro it makes my life soo easy!
                         writeln!(ByteMutWriter::new(&mut buf2), "{},{}", s.0.as_m(), s.1.as_m()).unwrap();
                         uart0_out_string(core::str::from_utf8_unchecked(&buf2));
-                        delay_1ms(1);
+                        delay_1ms(1);  // Tried to make data transmission more reliable (it didn't work)
                     }
                 }
             }
@@ -94,7 +102,7 @@ pub unsafe fn level1_main() -> ! {
         lcd_out_string(core::str::from_utf8_unchecked(&buf));
         uart0_out_string(core::str::from_utf8_unchecked(&buf));
         buf.fill(0);
-        delay_1ms(100);
+        delay_1ms(100);  // Please don't kill me for using delay :)
     }
 }
 

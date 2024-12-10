@@ -27,6 +27,7 @@ use tachometer::{get_distances_and_clear, get_speeds, tachometer_init};
 use timer_a1::timera1_init;
 use uart0::uart0_init;
 use units::Time;
+use crate::adc14::adc0_init;
 
 use crate::level1::{level1_main, level1_periodic};
 use crate::level2::{level2_main, level2_periodic};
@@ -66,7 +67,6 @@ unsafe fn main() -> ! {
     clock_init48mhz();
 
     RGBLed::init();
-    timera1_init(task, LOOP_TIME);
 
     lcd_init();
     motor_init();
@@ -74,6 +74,9 @@ unsafe fn main() -> ! {
     odometry_init();
     bump_init();
     uart0_init();
+    adc0_init();
+    
+    timera1_init(task, LOOP_TIME);
 
     // level1_main();
     level2_main();

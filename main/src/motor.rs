@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 use core::cmp::min;
+use crate::math::clamp;
+use crate::odometry::RobotDirection;
 
 use crate::peripherals::peripherals;
 
@@ -40,6 +42,16 @@ pub fn motor_brake() {
 
     pwm_duty_left(0);
     pwm_duty_right(0);
+}
+
+/// Positive error -> go right
+pub fn max_drive(error: f32, k_p: f32) {
+    let diff = clamp(error * k_p, 700.0) as i16;
+    if diff < 0 {
+        motor_drive(1000 + diff, 1000);
+    } else {
+        motor_drive(1000, 1000 - diff);
+    }
 }
 
 pub fn motor_drive(duty_left: i16, duty_right: i16) {

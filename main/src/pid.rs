@@ -1,12 +1,13 @@
 use crate::{ELAPSED, LEFT, ramsete, RIGHT};
+use crate::math::abs;
 use crate::motor::{motor_brake, motor_drive};
 use crate::odometry::{odometry_get_state, Pose, RobotState, to_wheel_speeds};
 use crate::trajectories::TRAJECTORY;
 use crate::units::Velocity;
 
-const K_P: f32 = 50.0;
-const K_I: f32 = 5.0;
-const K_D: f32 = -10.0;
+const K_P: f32 = 1000.0;
+const K_I: f32 = 0.0;
+const K_D: f32 = 0.0;
 const K_F: f32 = 1070.0;
 
 const PREV_WINDOW: usize = 3;
@@ -37,14 +38,16 @@ impl PIDFController {
     pub fn compute(&mut self, setpoint: f32, current: f32) -> f32 {
         let error = setpoint - current;
 
+        // Compute D gain
         self.buf_idx = (self.buf_idx + 1) % BUF_SIZE;
         self.prev_sum += self.d_buf[(self.buf_idx + PREV_WINDOW) % BUF_SIZE] - self.d_buf[self.buf_idx];
         self.current_sum += error - self.d_buf[(self.buf_idx + (BUF_SIZE - CURRENT_WINDOW)) % BUF_SIZE];
         self.d_buf[self.buf_idx] = error;
-
         let d_gain = ((self.current_sum / CURRENT_WINDOW as f32) - (self.prev_sum / PREV_WINDOW as f32)) / (WINDOW_GAP as f32 + 0.5 * (CURRENT_WINDOW + PREV_WINDOW) as f32);
 
-        let i_val = if error > 0.2 {
+        // Zero out I gain if the error is too high
+        let i_val = if abs(error) > 0.2 {
+            self.accum_error = 0.0;
             0.0
         } else {
             self.accum_error += error;

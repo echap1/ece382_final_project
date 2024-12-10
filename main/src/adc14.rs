@@ -9,14 +9,16 @@ struct ADCOutput {
 }
 
 pub struct IRSensorOutput {
-    left: Length,
-    center: Length,
-    right: Length
+    pub left: Length,
+    pub center: Length,
+    pub right: Length
 }
 
-static mut CH17: MovingAverage<u32, 256> = MovingAverage::new(0);
-static mut CH14: MovingAverage<u32, 256> = MovingAverage::new(0);
-static mut CH16: MovingAverage<u32, 256> = MovingAverage::new(0);
+type Average = MovingAverage<u32, 2>;
+
+static mut CH17: Average = MovingAverage::new(0);
+static mut CH14: Average = MovingAverage::new(0);
+static mut CH16: Average = MovingAverage::new(0);
 
 pub fn adc0_init() {
     let p = peripherals();
@@ -34,6 +36,7 @@ pub fn adc0_init() {
     p.dio.pesel0().modify(|r, w| unsafe { w.p9sel0().bits(r.p9sel0().bits() | 3) });
     p.dio.pesel1().modify(|r, w| unsafe { w.p9sel1().bits(r.p9sel1().bits() | 3) });
     p.adc14.adc14ctl0().modify(|r, w| unsafe { w.bits(r.bits() | 2)});
+    adc_in_raw();
 }
 
 const MAX_DIST: u32 = 800;  // mm
@@ -49,16 +52,26 @@ fn adc_convert(val: u32, adcmax: u32, irslope: u32, iroffset: u32, dist_offset: 
     } as f32)
 }
 
-pub fn adc_in() -> IRSensorOutput {
+static mut ADC: IRSensorOutput = IRSensorOutput {
+    left: Length::from_m(0.0),
+    center: Length::from_m(0.0),
+    right: Length::from_m(0.0),
+};
+
+pub fn adc_update() {
     let raw = adc_in_raw();
     let left = unsafe { CH16.push_and_report(raw.ch16) };
     let center = unsafe { CH14.push_and_report(raw.ch14) };
     let right = unsafe { CH17.push_and_report(raw.ch17) };
-    IRSensorOutput {
+    unsafe { ADC = IRSensorOutput {
         left: adc_convert(left, 1112, 1083571, 342, 80),
         center: adc_convert(center, 1234, 1081174, 572, 70),
         right: adc_convert(right, 1367, 1121822, 478, 80),
-    }
+    } }
+}
+
+pub fn adc_get() -> &'static IRSensorOutput {
+    unsafe { &ADC }
 }
 
 fn adc_in_raw() -> ADCOutput {
@@ -67,8 +80,8 @@ fn adc_in_raw() -> ADCOutput {
     p.adc14.adc14ctl0().modify(|r, w| unsafe { w.bits(r.bits() | 1)});
     while p.adc14.adc14ifgr0().read().adc14ifg4().bit_is_clear() { }
     ADCOutput {
-        ch17: p.adc14.adc14mem(2).read().bits(),
-        ch14: p.adc14.adc14mem(3).read().bits(),
-        ch16: p.adc14.adc14mem(4).read().bits(),
+        ch17: p.adc14.adc14mem(2).read().bits() & 0x3fff,
+        ch14: p.adc14.adc14mem(3).read().bits() & 0x3fff,
+        ch16: p.adc14.adc14mem(4).read().bits() & 0x3fff,
     }
 }
